@@ -1,0 +1,7 @@
+## Interface: 60200
+## Title: TrashTalk
+## Notes: /whisper trashtalk across realm to arena enemies, after or during game
+## SavedVariables: TrashTalkPresets, TrashTalkOptions, TrashTalkSavedWhispers
+
+TrashTalk.lua
+TrashTalk.xml
