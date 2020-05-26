@@ -1,5 +1,5 @@
 --[[
-Addon created by Steven Ventura (aka noob)
+Addon created by Steven Ventura aka gangsthurh aka gnome aka noob aka gnome child aka steven steven aka 
 All rights reserved
 kek
 work started on 11/14/15
