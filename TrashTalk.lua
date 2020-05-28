@@ -46,13 +46,16 @@ end
  --end function authorIsTrashTalkVictim
 function TrashTalkIncoming(ChatFrameSelf, event, message, author, ...)
 	if (authorIsTrashTalkVictim(author)) then
-		biggestxd = 0
+		largestIndex = -1
 		 --cos idk how to get biggest value in array or array size xd
 		for num, mess in ipairs(TrashTalkSavedWhispers[author]) do
-			biggestxd = num
+			largestIndex = num
 		end
 
-		TrashTalkSavedWhispers[author][biggestxd] = message --lol
+		largestIndex = largestIndex + 1;
+		log("largest index is " .. largestIndex);
+
+		TrashTalkSavedWhispers[author][largestIndex] = message --lol
 		print("saved message from " .. author)
 	end
 end
@@ -65,9 +68,7 @@ hitMarkerEnabled = false
 hitMarkerImage = nil
 local clicked1 = false
 clicked2 = false
-clicked3 = false
-clicked4 = false
-clickeed5 = false --for 'oh baby a triple'
+clicked3 = false -- for 'oh baby a triple'
 local tOhBabyATriple = 0
 local tIntervention = 0
 interventionEnabled = false
@@ -241,7 +242,7 @@ local function CreateOptions()
 	TrashTalkPanel = CreateFrame("Frame", "TrashTalkPanel", UIParent)
 	TrashTalkPanel.name = "TrashTalk /tt"
 
-	local option_hitmarker = CreateFrame("CheckButton", "option_hitmarker", TrashTalkPanel, "OptionsCheckButtonTemplate")
+	local option_hitmarker = CreateFrame("CheckButton", "option_hitmarker", TrashTalkPanel, "ChatConfigCheckButtonTemplate")
 	_G[option_hitmarker:GetName() .. "Text"]:SetText("Hitmarkers")
 	option_hitmarker:SetScript(
 		"OnEnter",
@@ -251,12 +252,13 @@ local function CreateOptions()
 		end
 	)
 	option_hitmarker:SetPoint("TOPLEFT", 20, -20)
-	option_hitmarker.setFunc = function(value)
+	option_hitmarker:SetScript("OnClick", function(value)
+		print("????");
 		TrashTalkOptions["Hitmarker"] = value == "1"
-	end
-	option_sendUponSight = CreateFrame("CheckButton", "option_sendUponSight", TrashTalkPanel, "OptionsCheckButtonTemplate")
-	option_juked = CreateFrame("CheckButton", "option_juked", option_sendUponSight, "OptionsCheckButtonTemplate")
-	option_kicked = CreateFrame("CheckButton", "option_kicked", option_juked, "OptionsCheckButtonTemplate")
+	end);
+	option_sendUponSight = CreateFrame("CheckButton", "option_sendUponSight", TrashTalkPanel, "ChatConfigCheckButtonTemplate")
+	option_juked = CreateFrame("CheckButton", "option_juked", option_sendUponSight, "ChatConfigCheckButtonTemplate")
+	option_kicked = CreateFrame("CheckButton", "option_kicked", option_juked, "ChatConfigCheckButtonTemplate")
 	_G[option_sendUponSight:GetName() .. "Text"]:SetText("Message players upon sight")
 	_G[option_juked:GetName() .. "Text"]:SetText("Message players upon getting juked")
 	_G[option_kicked:GetName() .. "Text"]:SetText("Message players when someone kicks them")
@@ -286,15 +288,15 @@ local function CreateOptions()
 	option_sendUponSight:SetPoint("TOPLEFT", 20, -60)
 	option_juked:SetPoint("TOPLEFT", 0, -60)
 	option_kicked:SetPoint("TOPLEFT", 0, -60)
-	option_sendUponSight.setFunc = function(value)
+	option_sendUponSight:SetScript("OnClick", function(value)
 		TrashTalkOptions["SendUponSight"] = value == "1"
-	end
-	option_juked.setFunc = function(value)
+	end);
+	option_juked:SetScript("OnClick", function(value)
 		TrashTalkOptions["Juked"] = value == "1"
-	end
-	option_kicked.setFunc = function(value)
+	end);
+	option_kicked:SetScript("OnClick", function(value)
 		TrashTalkOptions["Kicked"] = value == "1"
-	end
+	end);
 
 	editbox_sendUponSight = CreateFrame("EditBox", "editbox_sendUponSight", option_sendUponSight, "InputBoxTemplate")
 	editbox_juked = CreateFrame("EditBox", "editbox_juked", option_juked, "InputBoxTemplate")
@@ -536,26 +538,12 @@ function TrashTalk_initialize()
 	arena2frame:SetBackdropColor(0, 0, 1)
 
 	arena3frame:SetText("")
-	arena4frame:SetText("")
-	arena5frame:SetText("")
 	arena3frame:SetPoint("TOPLEFT", tex, "TOPLEFT", 0, -13 - (buttonHeight - 2) * 2)
-	arena4frame:SetPoint("TOPLEFT", tex, "TOPLEFT", 0, -13 - (buttonHeight - 2) * 3)
-	arena5frame:SetPoint("TOPLEFT", tex, "TOPLEFT", 0, -13 - (buttonHeight - 2) * 4)
 	arena3frame:SetWidth(buttonWidth)
-	arena4frame:SetWidth(buttonWidth)
-	arena5frame:SetWidth(buttonWidth)
 	arena3frame:SetHeight(buttonHeight)
-	arena4frame:SetHeight(buttonHeight)
-	arena5frame:SetHeight(buttonHeight)
 	arena3frame:SetScript("OnClick", buttonThreePressed)
-	arena4frame:SetScript("OnClick", buttonFourPressed)
-	arena5frame:SetScript("OnClick", buttonFivePressed)
 	arena3frame:SetBackdropBorderColor(0, 0, 1)
-	arena4frame:SetBackdropBorderColor(0, 0, 1)
-	arena5frame:SetBackdropBorderColor(0, 0, 1)
 	arena3frame:SetBackdropColor(0, 0, 1)
-	arena4frame:SetBackdropColor(0, 0, 1)
-	arena5frame:SetBackdropColor(0, 0, 1)
 	backgroundFrame:Show()
 
 	local frameTemp = CreateFrame("FRAME", "TrashTalkFrame")
@@ -592,21 +580,12 @@ function manageFrames(justJoinedArena, justLeftArena)
 	arena1frame:SetText(enemy1["name"] .. enemy1["class"])
 	arena2frame:SetText(enemy2["name"] .. enemy2["class"])
 	arena3frame:SetText(enemy3["name"] .. enemy3["class"])
-	arena4frame:SetText(enemy4["name"] .. enemy4["class"])
-	arena5frame:SetText(enemy5["name"] .. enemy5["class"])
 
 	if (enemy3["exists"] == true) then
 		arena3frame:Show()
 		backgroundFrame:SetSize(buttonWidth, buttonHeight * 3)
 	end
-	if (enemy4["exists"] == true) then
-		arena4frame:Show()
-		backgroundFrame:SetSize(buttonWidth, buttonHeight * 4)
-	end
-	if (enemy5["exists"] == true) then
-		arena5frame:Show()
-		backgroundFrame:SetSize(buttonWidth, buttonHeight * 5)
-	end
+	
 end
  --end manageFrames
 
@@ -634,12 +613,6 @@ function handleOhBabyATriple(elapsed)
 	if (clicked3) then
 		numClicked = numClicked + 1
 	end
-	if (clicked4) then
-		numClicked = numClicked + 1
-	end
-	if (clicked5) then
-		numClicked = numClicked + 1
-	end
 	if (tOhBabyATriple == 0 and numClicked > 2) then
 		interventionEnabled = true
 		enableSnoopDogg()
@@ -650,8 +623,6 @@ function handleOhBabyATriple(elapsed)
 		clicked1 = false
 		clicked2 = false
 		clicked3 = false
-		clicked4 = false
-		clicked5 = false
 	end
 
 	if (numClicked > 2) then
@@ -884,59 +855,6 @@ function TrashTalk_OnUpdate(self, elapsed)
 	 --end exists
 	end
 	 --end 3
-
-	if (playerIsInArena and (enemy4["exists"] == false or enemy4["name"] == "Unknown")) then --if i want to write to it
-		if (UnitExists("arena4")) then
-			enemy4["exists"] = true
-			enemy4["name"], enemy4["realm"] = UnitName("arena4")
-			if (UnitFactionGroup("arena4") ~= playersFaction) then
-				enemy4["name"] = "" .. enemyFaction .. " :-(" --they are the other faction and cannot be whispered.
-				enemy4["realm"] = ""
-			elseif (TrashTalkOptions["SendUponSight"] == true and enemy4["name"] ~= "Unknown") then
-				if (enemy4["realm"] == nil) then --they are on the same realm as player
-					SendTrashTalkMessage(TrashTalkOptions["SendUponSightText"], "WHISPER", nil, enemy4["name"])
-				else
-					SendTrashTalkMessage(
-						TrashTalkOptions["SendUponSightText"],
-						"WHISPER",
-						nil,
-						enemy4["name"] .. "-" .. enemy4["realm"]
-					)
-				end
-			end
-			 --end not faction
-			enemy4["class"] = UnitClass("arena4")
-			manageFrames(false, false)
-		end
-	 --end exists
-	end
-	 --end 4
-	if (playerIsInArena and (enemy5["exists"] == false or enemy5["name"] == "Unknown")) then --if i want to write to it
-		if (UnitExists("arena5")) then
-			enemy5["exists"] = true
-			enemy5["name"], enemy5["realm"] = UnitName("arena5")
-			if (UnitFactionGroup("arena5") ~= playersFaction) then
-				enemy5["name"] = "" .. enemyFaction .. " :-(" --they are the other faction and cannot be whispered.
-				enemy5["realm"] = ""
-			elseif (TrashTalkOptions["SendUponSight"] == true and enemy5["name"] ~= "Unknown") then
-				if (enemy5["realm"] == nil) then --they are on the same realm as player
-					SendTrashTalkMessage(TrashTalkOptions["SendUponSightText"], "WHISPER", nil, enemy5["name"])
-				else
-					SendTrashTalkMessage(
-						TrashTalkOptions["SendUponSightText"],
-						"WHISPER",
-						nil,
-						enemy5["name"] .. "-" .. enemy5["realm"]
-					)
-				end
-			end
-			 --end not faction
-			enemy5["class"] = UnitClass("arena5")
-			manageFrames(false, false)
-		end
-	 --end exists
-	end
- --end 5
 end
  --end TrashTalk_OnUpdate
 
@@ -1000,31 +918,7 @@ function buttonThreePressed()
 end
  --end buttonThreePressed
 
-function buttonFourPressed()
-	fixPresets()
-	clicked4 = true
 
-	if (enemy4["realm"] == nil) then --they are on the same realm as player
-		SendTrashTalkMessage(currentPreset, "WHISPER", nil, enemy4["name"])
-	else
-		SendTrashTalkMessage(currentPreset, "WHISPER", nil, enemy4["name"] .. "-" .. enemy4["realm"])
-	end
-	arenaButtonClicked(arena4frame)
-end
- --end buttonFourPressed
-
-function buttonFivePressed()
-	fixPresets()
-	clicked5 = true
-
-	if (enemy5["realm"] == nil) then --they are on the same realm as player
-		SendTrashTalkMessage(currentPreset, "WHISPER", nil, enemy5["name"])
-	else
-		SendTrashTalkMessage(currentPreset, "WHISPER", nil, enemy5["name"] .. "-" .. enemy5["realm"])
-	end
-	arenaButtonClicked(arena5frame)
-end
- --end buttonFivePressed
 
 --to be called from the three button functions
 function arenaButtonClicked(fureemu)
