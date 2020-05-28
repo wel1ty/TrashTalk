@@ -12,17 +12,43 @@ Because aint nobody got time to look up all the alt codes for the names of the p
 2/22/2018
 save the messages people send me
 
-TrashTalkSavedWhispers
+class TrashTalkMessage	
+	(int index)
+	string sender
+	int time
+	string content
+
+class TrashTalkSavedWhispers
+	string victim (index)
+	list<TrashTalkMessage>
+
 
 ]]
-boysToAddToTrashTalkStack = {}
 
 function SendTrashTalkMessage(a, b, c, d)
 	--SendTrashTalkMessage(TrashTalkOptions["KickedText"],"WHISPER",nil,destName);
 	SendChatMessage(a, b, c, d)
+end
+function AddTrashTalkVictim(victim)
+	if (TrashTalkSavedWhispers[victim] == nil) then
+		TrashTalkSavedWhispers[victim] = {};
+		TrashTalkSavedWhispers[victim]["messages"] = {};
+	end
+end
 
-	boysToAddToTrashTalkStack[d] = d
-	print("adding " .. boysToAddToTrashTalkStack[d] .. " to boystack")
+function lengthffs(T)
+	local count = 0
+	for _ in pairs(T) do count = count + 1 end
+	return count
+  end
+
+function AddTrashTalkMessage(victim, sender, content)
+	local messages = TrashTalkSavedWhispers[victim]["messages"];
+	local lenx = lengthffs(messages);
+	messages[(lenx+1)] = {};
+	messages[(lenx+1)]["sender"] = sender;
+	messages[(lenx+1)]["time"] = time();
+	messages[(lenx+1)]["content"] = content;
 end
 --end function SendTrashTalkMessage
 function authorIsTrashTalkVictim(author)
@@ -33,30 +59,13 @@ function authorIsTrashTalkVictim(author)
 		end
 	end
 	--end for
-	--now include all "temporary whispers"
-	--its called a stack but i never bother removing from the stack lol
-	for c, d in pairs(boysToAddToTrashTalkStack) do
-		if (c == author) then
-			return true
-		end
-	end
-	--end for
 	return false
 end
 --end function authorIsTrashTalkVictim
-function TrashTalkIncoming(ChatFrameSelf, event, message, author, ...)
+function TrashTalkIncoming(ChatFrameSelf, event, content, author, ...)
 	if (authorIsTrashTalkVictim(author)) then
-		largestIndex = -1
-		--cos idk how to get biggest value in array or array size xd
-		for num, mess in ipairs(TrashTalkSavedWhispers[author]) do
-			largestIndex = num
-		end
-
-		largestIndex = largestIndex + 1
-		log("largest index is " .. largestIndex)
-
-		TrashTalkSavedWhispers[author][largestIndex] = message --lol
-		print("saved message from " .. author)
+		AddTrashTalkMessage(author, author, content);
+		print("saving message from " .. author);
 	end
 end
 --end function TrashTalkIncoming
@@ -148,6 +157,12 @@ TrashTalk_eventFrame:SetScript(
 	end
 )
 function TrashTalk_eventFrame:VARIABLES_LOADED()
+	if (TrashTalkSavedWhispers == nil) then
+		TrashTalkSavedWhispers = {};
+	end
+	AddTrashTalkVictim("Wellsfargo-Gorefiend");
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER",TrashTalkIncoming);
+
 	fixPresets() --init variables if they arent yet
 	------------------------------------------------------------------
 	-- Create the dropdown, and configure its appearance
