@@ -24,31 +24,32 @@ class TrashTalkSavedWhispers
 
 
 ]]
-
 function SendTrashTalkMessage(a, b, c, d)
 	--SendTrashTalkMessage(TrashTalkOptions["KickedText"],"WHISPER",nil,destName);
 	SendChatMessage(a, b, c, d)
 end
 function AddTrashTalkVictim(victim)
 	if (TrashTalkSavedWhispers[victim] == nil) then
-		TrashTalkSavedWhispers[victim] = {};
-		TrashTalkSavedWhispers[victim]["messages"] = {};
+		TrashTalkSavedWhispers[victim] = {}
+		TrashTalkSavedWhispers[victim]["messages"] = {}
 	end
 end
 
 function lengthffs(T)
 	local count = 0
-	for _ in pairs(T) do count = count + 1 end
+	for _ in pairs(T) do
+		count = count + 1
+	end
 	return count
-  end
+end
 
 function AddTrashTalkMessage(victim, sender, content)
-	local messages = TrashTalkSavedWhispers[victim]["messages"];
-	local lenx = lengthffs(messages);
-	messages[(lenx+1)] = {};
-	messages[(lenx+1)]["sender"] = sender;
-	messages[(lenx+1)]["time"] = time();
-	messages[(lenx+1)]["content"] = content;
+	local messages = TrashTalkSavedWhispers[victim]["messages"]
+	local lenx = lengthffs(messages)
+	messages[(lenx + 1)] = {}
+	messages[(lenx + 1)]["fromHim"] = (sender == victim)
+	messages[(lenx + 1)]["time"] = time()
+	messages[(lenx + 1)]["content"] = content
 end
 --end function SendTrashTalkMessage
 function authorIsTrashTalkVictim(author)
@@ -63,9 +64,10 @@ function authorIsTrashTalkVictim(author)
 end
 --end function authorIsTrashTalkVictim
 function TrashTalkIncoming(ChatFrameSelf, event, content, author, ...)
+	print("author is " .. author);
 	if (authorIsTrashTalkVictim(author)) then
-		AddTrashTalkMessage(author, author, content);
-		print("saving message from " .. author);
+		AddTrashTalkMessage(author, author, content)
+		print("saving message from " .. author)
 	end
 end
 --end function TrashTalkIncoming
@@ -156,12 +158,17 @@ TrashTalk_eventFrame:SetScript(
 		TrashTalk_OnUpdate(self, elapsed)
 	end
 )
+function TrashTalkOutgoing(a, b, message, name, ...)
+	AddTrashTalkMessage(name, UnitName("player"), message);
+end
 function TrashTalk_eventFrame:VARIABLES_LOADED()
 	if (TrashTalkSavedWhispers == nil) then
-		TrashTalkSavedWhispers = {};
+		TrashTalkSavedWhispers = {}
 	end
-	AddTrashTalkVictim("Wellsfargo-Gorefiend");
-	ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER",TrashTalkIncoming);
+	AddTrashTalkVictim("Wellsfargo-Gorefiend")
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", TrashTalkIncoming)
+	--hooksecurefunc("ChatEdit_ParseText", TrashTalkOutgoing)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", TrashTalkOutgoing)
 
 	fixPresets() --init variables if they arent yet
 	------------------------------------------------------------------
@@ -228,7 +235,7 @@ function initializeEnemies()
 
 	print(ttenemies[1]["name"])
 	ttbuttons[3]:Hide()
- --default to show 2s, add one if its 3s.
+	--default to show 2s, add one if its 3s.
 end
 --end function initializeEnemies;
 
@@ -545,7 +552,7 @@ function TrashTalk_initialize()
 	backgroundFrame:Show()
 
 	for i = 1, 3 do
-		local selectedArenaFrame = ttbuttons[i];
+		local selectedArenaFrame = ttbuttons[i]
 		selectedArenaFrame:SetText("")
 		selectedArenaFrame:SetPoint("TOPLEFT", tex, "TOPLEFT", 0, -13 - (buttonHeight - 2) * (i - 1))
 		selectedArenaFrame:SetWidth(buttonWidth)
