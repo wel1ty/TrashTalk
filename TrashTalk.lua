@@ -30,6 +30,7 @@ function SendTrashTalkMessage(a, b, c, d)
 end
 function AddTrashTalkVictim(victim)
 	if (TrashTalkSavedWhispers[victim] == nil) then
+		print("adding victim " .. victim);
 		TrashTalkSavedWhispers[victim] = {}
 		TrashTalkSavedWhispers[victim]["messages"] = {}
 	end
@@ -44,12 +45,15 @@ function lengthffs(T)
 end
 
 function AddTrashTalkMessage(victim, sender, content)
-	local messages = TrashTalkSavedWhispers[victim]["messages"]
-	local lenx = lengthffs(messages)
-	messages[(lenx + 1)] = {}
-	messages[(lenx + 1)]["fromHim"] = (sender == victim)
-	messages[(lenx + 1)]["time"] = time()
-	messages[(lenx + 1)]["content"] = content
+	if (authorIsTrashTalkVictim(victim)) then
+		print("saving message from " .. sender)
+		local messages = TrashTalkSavedWhispers[victim]["messages"]
+		local lenx = lengthffs(messages)
+		messages[(lenx + 1)] = {}
+		messages[(lenx + 1)]["fromHim"] = (sender == victim)
+		messages[(lenx + 1)]["time"] = time()
+		messages[(lenx + 1)]["content"] = content
+	end
 end
 --end function SendTrashTalkMessage
 function authorIsTrashTalkVictim(author)
@@ -64,11 +68,7 @@ function authorIsTrashTalkVictim(author)
 end
 --end function authorIsTrashTalkVictim
 function TrashTalkIncoming(ChatFrameSelf, event, content, author, ...)
-	print("author is " .. author);
-	if (authorIsTrashTalkVictim(author)) then
-		AddTrashTalkMessage(author, author, content)
-		print("saving message from " .. author)
-	end
+	AddTrashTalkMessage(author, author, content)
 end
 --end function TrashTalkIncoming
 local screenWidth
@@ -162,10 +162,19 @@ function TrashTalkOutgoing(a, b, message, name, ...)
 	AddTrashTalkMessage(name, UnitName("player"), message);
 end
 function TrashTalk_eventFrame:VARIABLES_LOADED()
+	print("clearing trashtalksavedwhispers");
+	TrashTalkSavedWhispers = nil;
 	if (TrashTalkSavedWhispers == nil) then
 		TrashTalkSavedWhispers = {}
 	end
+
 	AddTrashTalkVictim("Wellsfargo-Gorefiend")
+	AddTrashTalkVictim(UnitName("player"));
+	for i=1,2 do
+		AddTrashTalkMessage("Wellsfargo-Gorefiend", "Wellsfargo-Gorefiend", "test message " .. i);
+		AddTrashTalkMessage("Wellsfargo-Gorefiend", UnitName("player"), "test message " .. i);
+	end
+	AddTrashTalkVictim("Rskkarmatko-Tichondrius")
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", TrashTalkIncoming)
 	--hooksecurefunc("ChatEdit_ParseText", TrashTalkOutgoing)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", TrashTalkOutgoing)
@@ -232,8 +241,6 @@ function initializeEnemies()
 		selectedEnemy["class"] = ""
 		selectedEnemy["exists"] = false
 	end
-
-	print(ttenemies[1]["name"])
 	ttbuttons[3]:Hide()
 	--default to show 2s, add one if its 3s.
 end
@@ -242,6 +249,90 @@ end
 -- from PiL2 20.4
 function trim(s)
 	return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
+function TTPopulateTrophies()
+	local frame  = CreateFrame("Frame", "GottaMogEmAllOutputFrame", UIParent)
+	frame.width  = 500
+	frame.height = 250
+	frame:SetFrameStrata("FULLSCREEN_DIALOG")
+	frame:SetSize(frame.width, frame.height)
+	frame:SetPoint("CENTER", UIParent)
+	frame:SetBackdrop({
+		bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
+		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+		insets   = { left = 10, right = 10, top = 10, bottom = 10 }
+	})
+	frame:SetBackdropColor(0, 0, 0, 0.8)
+	frame:EnableMouse(true)
+	frame:EnableMouseWheel(true)
+
+	-- Make movable 
+	frame:SetMovable(true)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", frame.StartMoving)
+	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+		
+	local messageFrame = CreateFrame("ScrollingMessageFrame", nil, frame)
+	messageFrame:SetPoint("LEFT", 15, 20)
+	messageFrame:SetSize(frame.width, frame.height - 50)
+	messageFrame:SetFontObject(GameFontNormal)
+	messageFrame:SetTextColor(1, 1, 1, 1)
+	messageFrame:SetJustifyH("LEFT")
+	messageFrame:SetFading(false)
+	messageFrame:SetMaxLines(1000)
+	for i,v in pairs(TrashTalkSavedWhispers) do
+		--print(i);
+		--i is name
+		--v is table.
+		local messages = v["messages"];
+		--[[
+			messages[(lenx + 1)]["fromHim"] = (sender == victim)
+			messages[(lenx + 1)]["time"] = time()
+			messages[(lenx + 1)]["content"] = content
+		--]]
+		if (messages ~= nil) then
+			for i3, v3 in pairs(messages) do
+				local author = nil;
+				local fromHim  = v3["fromHim"];
+				if (fromHim) then
+					author = '|cffff0000' .. i;
+				else
+					author = '|cff0000ff' .. UnitName("player");
+				end
+				messageFrame:AddMessage('[' .. author .. '|cffffffff]: ' .. v3["content"]);
+			end
+		end
+	end
+
+	local scrollBar = CreateFrame("Slider", nil, frame, "UIPanelScrollBarTemplate")
+	scrollBar:SetPoint("RIGHT", frame, "RIGHT", -10, 10)
+	scrollBar:SetSize(30, frame.height - 90)
+	scrollBar:SetMinMaxValues(0, 99)
+	scrollBar:SetValueStep(1)
+	scrollBar.scrollStep = 1
+	frame.scrollBar = scrollBar
+
+	scrollBar:SetScript("OnValueChanged", function(self, value)
+		messageFrame:SetScrollOffset(select(2, scrollBar:GetMinMaxValues()) - value)
+	end)
+	
+	scrollBar:SetValue(select(2, scrollBar:GetMinMaxValues()))
+	
+	frame:SetScript("OnMouseWheel", function(self, delta)
+		--print(messageFrame:GetNumMessages(), messageFrame:GetNumLinesDisplayed())
+	
+		local cur_val = scrollBar:GetValue()
+		local min_val, max_val = scrollBar:GetMinMaxValues()
+	
+		if delta < 0 and cur_val < max_val then
+			cur_val = math.min(max_val, cur_val + 1)
+			scrollBar:SetValue(cur_val)
+		elseif delta > 0 and cur_val > min_val then
+			cur_val = math.max(min_val, cur_val - 1)
+			scrollBar:SetValue(cur_val)
+		end
+	end)
 end
 
 local function CreateOptions()
@@ -336,12 +427,16 @@ local function CreateOptions()
 	editbox_sendUponSight:SetPoint("TOPLEFT", 0, -30)
 	editbox_juked:SetPoint("TOPLEFT", 0, -30)
 	editbox_kicked:SetPoint("TOPLEFT", 0, -30)
+	
 	editbox_sendUponSight:SetSize(400, 20)
 	editbox_juked:SetSize(400, 20)
 	editbox_kicked:SetSize(400, 20)
+	
 	editbox_sendUponSight:SetAutoFocus(false)
 	editbox_juked:SetAutoFocus(false)
 	editbox_kicked:SetAutoFocus(false)
+	
+	TTPopulateTrophies();
 	local function eb1update()
 		TrashTalkOptions["SendUponSightText"] = editbox_sendUponSight:GetText()
 	end
@@ -388,7 +483,6 @@ function TrashTalk_initialize()
 		local split = ttSplitString(c)
 
 		local n = getn(split)
-		print("n is " .. n)
 		if (n == 0) then
 			InterfaceOptionsFrame_OpenToCategory(TrashTalkPanel)
 		end
@@ -798,6 +892,13 @@ function TrashTalk_OnUpdate(self, elapsed)
 			if (UnitExists("arena" .. i)) then
 				selectedEnemy["exists"] = true
 				selectedEnemy["name"], selectedEnemy["realm"] = UnitName("arena" .. i)
+				local namelol = selectedEnemy["name"];
+				local realmlol = selectedEnemy["realm"];
+				local appendmelol = selectedEnemy["name"];
+				if (realmlol ~= nil) then
+					appendmelol = appendmelol .. "-" .. realmlol;
+				end
+				AddTrashTalkVictim(appendmelol);
 				if (UnitFactionGroup("arena" .. i) ~= playersFaction) then
 					selectedEnemy["name"] = "" .. enemyFaction .. " :-(" --they are the other faction and cannot be whispered.
 					selectedEnemy["realm"] = ""
